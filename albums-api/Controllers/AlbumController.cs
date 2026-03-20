@@ -1,5 +1,6 @@
 ﻿using albums_api.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 using System.Net;
 using System.Text.Json;
 using System.Text;
@@ -25,7 +26,47 @@ namespace albums_api.Controllers
         [HttpGet("{id}")]
         public IActionResult Get(int id)
         {
-            return Ok();
+            // here we will get the album by id
+            var album = Album.GetById(id);
+
+            if (album == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(album);
+
+        }
+
+        // function that retrieves albums and sorts them by title, artist or price
+        // if no sort parameter is provided, it returns all albums ordered by id
+        [HttpGet("sorted")]
+        public IActionResult GetSorted(string? sort)
+        {
+            var albums = Album.GetAll();
+
+            if (string.IsNullOrWhiteSpace(sort))
+            {
+                albums = albums.OrderBy(a => a.Id).ToList();
+                return Ok(albums);
+            }
+
+            switch (sort.Trim().ToLower())
+            {
+                case "title":
+                    albums = albums.OrderBy(a => a.Title).ToList();
+                    break;
+                case "artist":
+                    albums = albums.OrderBy(a => a.Artist).ToList();
+                    break;
+                case "price":
+                    albums = albums.OrderBy(a => a.Price).ToList();
+                    break;
+                default:
+                    return BadRequest("Invalid sort parameter");
+            }
+
+            return Ok(albums);
         }
 
     }
